@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapp"
+    namespace = "com.example.neonwave"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

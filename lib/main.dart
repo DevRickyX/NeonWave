@@ -68,7 +68,13 @@ class _LibraryPageState extends State<LibraryPage> {
   bool includeSubfolders = false;
 
   static const _audioExts = {
-    '.mp3', '.m4a', '.aac', '.flac', '.ogg', '.opus', '.wav'
+    '.mp3',
+    '.m4a',
+    '.aac',
+    '.flac',
+    '.ogg',
+    '.opus',
+    '.wav',
   };
 
   @override
@@ -87,8 +93,8 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _ensurePermissions() async {
     if (!Platform.isAndroid) return;
     await [
-      Permission.storage,      // legacy
-      Permission.audio,        // Android 13+ READ_MEDIA_AUDIO
+      Permission.storage, // legacy
+      Permission.audio, // Android 13+ READ_MEDIA_AUDIO
       Permission.notification, // Android 13+ para mostrar la notificación
     ].request();
   }
@@ -98,7 +104,10 @@ class _LibraryPageState extends State<LibraryPage> {
     return _audioExts.contains(ext);
   }
 
-  Iterable<FileSystemEntity> _listFilesSync(Directory dir, {bool recursive = false}) sync* {
+  Iterable<FileSystemEntity> _listFilesSync(
+    Directory dir, {
+    bool recursive = false,
+  }) sync* {
     final lister = dir.listSync(recursive: recursive, followLinks: false);
     for (final e in lister) {
       if (e is File && _isAudioFile(e.path)) yield e;
@@ -136,7 +145,9 @@ class _LibraryPageState extends State<LibraryPage> {
       if (files.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No audio files found in this folder.')),
+            const SnackBar(
+              content: Text('No audio files found in this folder.'),
+            ),
           );
         }
         setState(() {
@@ -160,16 +171,35 @@ class _LibraryPageState extends State<LibraryPage> {
       });
 
       if (mounted) {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => PlayerPage(engine: engine),
-        ));
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => PlayerPage(engine: engine)));
       }
     } catch (e) {
       setState(() => loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
+  }
+
+  void _goToPlayerTapped() {
+    if (engine.playlist.isEmpty) {
+      // Si aún no hay playlist, te ofrezco dos opciones:
+      // A) Mostrar un aviso:
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Primero elige una carpeta de música')),
+      );
+      // B) O lanzar directamente el selector de carpeta:
+      // _pickFolder();
+      return;
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => PlayerPage(engine: engine)));
   }
 
   @override
@@ -205,16 +235,18 @@ class _LibraryPageState extends State<LibraryPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Neonwave',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                        foreground: Paint()
-                          ..shader = LinearGradient(
-                            colors: [cs.primary, cs.tertiary],
-                          ).createShader(const Rect.fromLTWH(0, 0, 220, 40)),
-                      )),
+                  Text(
+                    'Neonwave',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      foreground: Paint()
+                        ..shader = LinearGradient(
+                          colors: [cs.primary, cs.tertiary],
+                        ).createShader(const Rect.fromLTWH(0, 0, 220, 40)),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Select a folder to start playing your music.\nBold, modern, crossfading bliss 🎧',
@@ -226,7 +258,8 @@ class _LibraryPageState extends State<LibraryPage> {
                       FilterChip(
                         label: const Text('Include subfolders'),
                         selected: includeSubfolders,
-                        onSelected: (v) => setState(() => includeSubfolders = v),
+                        onSelected: (v) =>
+                            setState(() => includeSubfolders = v),
                       ),
                       const SizedBox(width: 12),
                       if (pickedFolder != null)
@@ -234,7 +267,9 @@ class _LibraryPageState extends State<LibraryPage> {
                           child: Text(
                             pickedFolder!,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                            ),
                             textAlign: TextAlign.right,
                           ),
                         ),
@@ -245,40 +280,58 @@ class _LibraryPageState extends State<LibraryPage> {
                     child: SizedBox(
                       width: 220,
                       height: 220,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: SweepGradient(
-                            colors: [
-                              cs.primary.withOpacity(0.85),
-                              cs.secondary.withOpacity(0.85),
-                              cs.tertiary.withOpacity(0.85),
-                              cs.primary.withOpacity(0.85),
-                            ],
-                            stops: const [0.0, 0.33, 0.66, 1.0],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: cs.primary.withOpacity(0.35),
-                              blurRadius: 30,
-                              spreadRadius: 2,
+                      child: Material(
+                        color: Colors.transparent,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: _goToPlayerTapped,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: SweepGradient(
+                                colors: [
+                                  cs.primary.withOpacity(0.85),
+                                  cs.secondary.withOpacity(0.85),
+                                  cs.tertiary.withOpacity(0.85),
+                                  cs.primary.withOpacity(0.85),
+                                ],
+                                stops: const [0.0, 0.33, 0.66, 1.0],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: cs.primary.withOpacity(0.35),
+                                  blurRadius: 30,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.music_note, size: 80, color: Colors.white),
+                            child: const Center(
+                              child: Icon(
+                                Icons.music_note,
+                                size: 80,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 32),
                   Center(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: cs.tertiary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       onPressed: loading ? null : _pickFolder,
                       icon: const Icon(Icons.folder_open),
@@ -313,7 +366,10 @@ class _PlayerPageState extends State<PlayerPage>
   @override
   void initState() {
     super.initState();
-    discCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 20));
+    discCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    );
     _playingSub = widget.engine.playingStream.listen((playing) {
       setState(() => isPlaying = playing);
       if (playing) {
@@ -431,10 +487,21 @@ class _PlayerPageState extends State<PlayerPage>
                                     e.seek(Duration(milliseconds: v.round())),
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(_fmt(pos), style: TextStyle(color: Colors.white.withOpacity(0.8))),
-                                  Text(_fmt(total), style: TextStyle(color: Colors.white.withOpacity(0.6))),
+                                  Text(
+                                    _fmt(pos),
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                  Text(
+                                    _fmt(total),
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -452,7 +519,9 @@ class _PlayerPageState extends State<PlayerPage>
                     children: [
                       IconButton(
                         tooltip: 'Shuffle',
-                        icon: Icon(e.shuffleEnabled ? Icons.shuffle_on : Icons.shuffle),
+                        icon: Icon(
+                          e.shuffleEnabled ? Icons.shuffle_on : Icons.shuffle,
+                        ),
                         onPressed: () async {
                           await e.setShuffle(!e.shuffleEnabled);
                           setState(() {});
@@ -467,12 +536,19 @@ class _PlayerPageState extends State<PlayerPage>
                       const SizedBox(width: 6),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isPlaying ? cs.tertiary : cs.secondary,
+                          backgroundColor: isPlaying
+                              ? cs.tertiary
+                              : cs.secondary,
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(16),
                         ),
                         onPressed: () => e.togglePlayPause(),
-                        child: Icon(isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded, size: 36),
+                        child: Icon(
+                          isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          size: 36,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       IconButton(
@@ -487,8 +563,8 @@ class _PlayerPageState extends State<PlayerPage>
                           e.loopMode == SimpleLoopMode.one
                               ? Icons.repeat_one_on
                               : (e.loopMode == SimpleLoopMode.all
-                                  ? Icons.repeat_on
-                                  : Icons.repeat_rounded),
+                                    ? Icons.repeat_on
+                                    : Icons.repeat_rounded),
                         ),
                         onPressed: () async {
                           await e.cycleLoopMode();
@@ -503,13 +579,18 @@ class _PlayerPageState extends State<PlayerPage>
                   // Crossfade slider (0-10s)
                   Card(
                     color: Colors.white.withOpacity(0.04),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Crossfade', style: TextStyle(fontWeight: FontWeight.w700)),
+                          const Text(
+                            'Crossfade',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                           StreamBuilder<int>(
                             stream: e.crossfadeSecondsStream,
                             initialData: e.crossfadeSeconds,
@@ -528,8 +609,12 @@ class _PlayerPageState extends State<PlayerPage>
                                   ),
                                   Align(
                                     alignment: Alignment.centerRight,
-                                    child: Text('${current.round()} s',
-                                        style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                                    child: Text(
+                                      '${current.round()} s',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               );
@@ -552,8 +637,12 @@ class _PlayerPageState extends State<PlayerPage>
                         final seq = e.playlist;
                         if (seq.isEmpty) {
                           return Center(
-                            child: Text('No tracks loaded',
-                                style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                            child: Text(
+                              'No tracks loaded',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
                           );
                         }
                         return ListView.builder(
@@ -569,11 +658,15 @@ class _PlayerPageState extends State<PlayerPage>
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: selected ? cs.secondary : Colors.white,
-                                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                                  fontWeight: selected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
                                 ),
                               ),
                               leading: Icon(
-                                selected ? Icons.graphic_eq : Icons.audiotrack_rounded,
+                                selected
+                                    ? Icons.graphic_eq
+                                    : Icons.audiotrack_rounded,
                                 color: selected ? cs.secondary : Colors.white70,
                               ),
                               onTap: () => e.playIndex(i),
@@ -638,7 +731,10 @@ class _NeonDisc extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(width: 6, color: cs.tertiary.withOpacity(0.65)),
+                border: Border.all(
+                  width: 6,
+                  color: cs.tertiary.withOpacity(0.65),
+                ),
               ),
             ),
           ),
@@ -662,7 +758,11 @@ class _NeonDisc extends StatelessWidget {
                 ],
               ),
               child: const Center(
-                child: Icon(Icons.play_arrow_rounded, color: Colors.black87, size: 36),
+                child: Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.black87,
+                  size: 36,
+                ),
               ),
             ),
           ),
@@ -678,7 +778,9 @@ class GridLinesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color..strokeWidth = 1;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
     const spacing = 32.0;
     for (double x = 0; x < size.width; x += spacing) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
